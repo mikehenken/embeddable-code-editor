@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embeddable Syntax Highlighter — Script Tag Example</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .editor-wrapper {
+      height: 520px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+  </style>
+  
+  <script src="./dist/embeddable-code-editor.standalone.js"></script>
+</head>
+<body>
+  <div class="page">
+    <h1>Embeddable Syntax Highlighter</h1>
+    <p class="subtitle">Read-only file tree + syntax highlighting. Load via script tag.</p>
+    
+    <div class="editor-wrapper">
+      <embeddable-code-editor id="my-editor"></embeddable-code-editor>
+    </div>
+  </div>
+
+  <script>
+    // Wait for the component to be defined (or just run after DOM load since script is synchronous)
+    document.addEventListener('DOMContentLoaded', () => {
+      const editor = document.getElementById('my-editor');
+      
+      // Configure the editor with files
+      editor.config = {
+        files: [
+          {
+            path: 'src/index.ts',
+            content: `import { EmbeddableCodeEditor } from './embeddable-code-editor';\n\nexport { EmbeddableCodeEditor };\n`,
+            language: 'typescript'
+          },
+          {
+            path: 'src/embeddable-code-editor.ts',
+            content: `import { LitElement, html, css } from 'lit';\nimport { customElement, property } from 'lit/decorators.js';\n\n@customElement('embeddable-code-editor')\nexport class EmbeddableCodeEditor extends LitElement {\n  @property() theme = 'dark';\n  \n  render() {\n    return html\`<div>Code Editor</div>\`;\n  }\n}\n`,
+            language: 'typescript'
+          },
+          {
+            path: 'package.json',
+            content: `{\n  "name": "embeddable-code-editor",\n  "version": "1.0.0",\n  "description": "A read-only code editor component"\n}\n`,
+            language: 'json'
+          },
+          {
+            path: 'README.md',
+            content: `# Embeddable Code Editor\n\nA web component for displaying code with a file tree.\n\n## Usage\n\n\`\`\`html\n<embeddable-code-editor></embeddable-code-editor>\n\`\`\`\n`,
+            language: 'markdown'
+          }
+        ]
+      };
+    });
+  </script>
+</body>
+</html>

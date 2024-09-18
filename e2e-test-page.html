@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E2E Test Page - Embeddable Code Editor</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; }
+    .editor-wrapper { height: 450px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+  </style>
+  <script src="./dist/embeddable-code-editor.standalone.js"></script>
+</head>
+<body>
+  <h1>E2E Test Page</h1>
+  <div class="editor-wrapper">
+    <embeddable-code-editor id="e2e-editor"></embeddable-code-editor>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const editor = document.getElementById('e2e-editor');
+      editor.config = {
+        files: [
+          {
+            path: 'src/index.ts',
+            content: 'export { EmbeddableCodeEditor } from "./embeddable-code-editor";\n',
+            language: 'typescript',
+            description: 'Entry point; re-exports the web component.'
+          },
+          {
+            path: 'src/example.js',
+            content: 'function hello() { return "world"; }\n',
+            language: 'javascript'
+          },
+          {
+            path: 'README.md',
+            content: '# Project\n\nUsage: add the script tag and set config.\n',
+            language: 'markdown'
+          }
+        ]
+      };
+    });
+  </script>
+</body>
+</html>
