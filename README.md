@@ -4,8 +4,15 @@ Read-only syntax highlighter with a file tree. Lit + Prism; use it from a script
 
 ## Install
 
+From GitHub Packages (npm alternative):
+
 ```bash
-npm install embeddable-code-editor
+npm install @mikehenken/embeddable-code-editor
+```
+
+Add to your project's `.npmrc`:
+```
+@mikehenken:registry=https://npm.pkg.github.com
 ```
 
 ## Config
@@ -71,11 +78,7 @@ From GitHub Release (v1.0.0):
 <script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.0.0/embeddable-code-editor.standalone.js"></script>
 ```
 
-From unpkg (after npm publish):
-
-```html
-<script src="https://unpkg.com/embeddable-code-editor/dist/embeddable-code-editor.standalone.js"></script>
-```
+For bundler users, install from GitHub Packages (see Install above). For script-tag, use the GitHub Release URL.
 
 ---
 

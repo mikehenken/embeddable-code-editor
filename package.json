@@ -1,5 +1,5 @@
 {
-  "name": "embeddable-code-editor",
+  "name": "@mikehenken/embeddable-code-editor",
   "version": "1.0.0",
   "description": "A read-only syntax highlighter with file tree as a web component",
   "type": "module",
@@ -17,6 +17,13 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikehenken/embeddable-code-editor.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && tsc -p tsconfig.build.json && vite build && vite build -c vite.standalone.config.ts",
@@ -36,10 +43,6 @@
     "code-editor"
   ],
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/landi-platform/embeddable-code-editor.git"
-  },
   "dependencies": {
     "lit": "^3.3.2",
     "prismjs": "^1.30.0"
