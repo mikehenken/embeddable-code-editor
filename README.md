@@ -65,7 +65,13 @@ Drop the standalone bundle in the page. It ships Lit and Prism, so one script is
 
 There’s a full example in the repo: **script-tag-example.html**. It uses the same pattern with several files and languages.
 
-From unpkg (replace with your version if you need a specific one):
+From GitHub Release (v1.0.0):
+
+```html
+<script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.0.0/embeddable-code-editor.standalone.js"></script>
+```
+
+From unpkg (after npm publish):
 
 ```html
 <script src="https://unpkg.com/embeddable-code-editor/dist/embeddable-code-editor.standalone.js"></script>
