@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * E2E and embed-verification tests for embeddable-code-editor.
+ * E2E and embed-verification tests for Embeda Code (embeda-code).
  * Serves the repo root so /dist and /examples / e2e/fixtures resolve correctly after build.
  * @see https://playwright.dev/docs/test-configuration
  */

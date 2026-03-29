@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as GitHub from '../github/github-fetcher';
-import './embeddable-code-editor';
-import { EmbeddableCodeEditor } from './embeddable-code-editor';
+import './embeda-code';
+import { EmbedaCode } from './embeda-code';
 
 function codePaneText(root: ShadowRoot | null | undefined): string {
   if (!root) {
     return '';
   }
-  const cells = root.querySelector('.code-scroll-body--rows')?.querySelectorAll('.line-code-cell');
-  if (cells && cells.length > 0) {
-    return Array.from(cells)
+  const gridLines = root.querySelectorAll('.code-grid-line');
+  if (gridLines.length > 0) {
+    return Array.from(gridLines)
       .map((n) => n.textContent ?? '')
       .join('\n');
   }
@@ -20,20 +20,20 @@ function codePaneHtml(root: ShadowRoot | null | undefined): string {
   if (!root) {
     return '';
   }
-  const cells = root.querySelector('.code-scroll-body--rows')?.querySelectorAll('.line-code-cell');
-  if (cells && cells.length > 0) {
-    return Array.from(cells)
+  const gridLines = root.querySelectorAll('.code-grid-line');
+  if (gridLines.length > 0) {
+    return Array.from(gridLines)
       .map((n) => n.innerHTML)
       .join('');
   }
   return root.querySelector('.code-area')?.innerHTML ?? '';
 }
 
-describe('EmbeddableCodeEditor', () => {
-  let element: EmbeddableCodeEditor;
+describe('EmbedaCode', () => {
+  let element: EmbedaCode;
 
   beforeEach(() => {
-    element = document.createElement('embeddable-code-editor') as EmbeddableCodeEditor;
+    element = document.createElement('embeda-code') as EmbedaCode;
     document.body.appendChild(element);
   });
 
@@ -272,13 +272,13 @@ describe('EmbeddableCodeEditor', () => {
     switchToLight.click();
     await element.updateComplete;
     expect(element.theme).toBe('light');
-    expect(setItem).toHaveBeenCalledWith('embeddable-code-editor-theme', 'light');
+    expect(setItem).toHaveBeenCalledWith('embedacode-theme', 'light');
 
     const switchToDark = element.shadowRoot?.querySelector('[aria-label="Switch to dark theme"]') as HTMLElement;
     switchToDark.click();
     await element.updateComplete;
     expect(element.theme).toBe('dark');
-    expect(setItem).toHaveBeenCalledWith('embeddable-code-editor-theme', 'dark');
+    expect(setItem).toHaveBeenCalledWith('embedacode-theme', 'dark');
   });
 
   it('persists theme to localStorage when toggled', async () => {
@@ -293,7 +293,7 @@ describe('EmbeddableCodeEditor', () => {
     const themeBtn = element.shadowRoot?.querySelector('[aria-label="Switch to light theme"]') as HTMLElement;
     themeBtn.click();
     await element.updateComplete;
-    expect(setItem).toHaveBeenCalledWith('embeddable-code-editor-theme', 'light');
+    expect(setItem).toHaveBeenCalledWith('embedacode-theme', 'light');
   });
 
   it('reflects theme attribute when theme is light', async () => {
@@ -385,11 +385,11 @@ describe('EmbeddableCodeEditor', () => {
     expect(codePaneText(element.shadowRoot)).not.toContain('zero');
   });
 
-  it('uses per-line row layout when wordWrap is true so gutters track wrapped lines', async () => {
+  it('uses CSS grid per logical line when wordWrap is true (wrap + aligned gutters)', async () => {
     element.config = { files: [{ path: 'x.js', content: 'line1\nline2' }] };
     await element.updateComplete;
-    expect(element.shadowRoot?.querySelector('.code-scroll-body--rows')).toBeTruthy();
-    expect(element.shadowRoot?.querySelectorAll('.code-line-row').length).toBe(2);
+    expect(element.shadowRoot?.querySelector('.code-grid')).toBeTruthy();
+    expect(element.shadowRoot?.querySelectorAll('.code-grid-line').length).toBe(2);
     expect(element.shadowRoot?.querySelector('.code-area')).toBeNull();
   });
 
@@ -398,6 +398,6 @@ describe('EmbeddableCodeEditor', () => {
     await element.updateComplete;
     const pre = element.shadowRoot?.querySelector('.code-area');
     expect(pre?.classList.contains('code-area--nowrap')).toBe(true);
-    expect(element.shadowRoot?.querySelector('.code-scroll-body--rows')).toBeNull();
+    expect(element.shadowRoot?.querySelector('.code-grid')).toBeNull();
   });
 });

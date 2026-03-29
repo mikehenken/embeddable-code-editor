@@ -1,18 +1,18 @@
 {
-  "name": "@mikehenken/embeddable-code-editor",
-  "version": "1.3.4",
-  "description": "A read-only syntax highlighter with file tree as a web component",
+  "name": "@mikehenken/embedacode",
+  "version": "2.0.0",
+  "description": "Embed an entire GitHub repo in a blog article, tutorial, or course — read-only tree + syntax-highlighted code. Lit web component, scoped so it won't fight your site or app styling.",
   "type": "module",
-  "main": "./dist/embeddable-code-editor.umd.js",
-  "module": "./dist/embeddable-code-editor.es.js",
+  "main": "./dist/embedacode.umd.js",
+  "module": "./dist/embedacode.es.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/embeddable-code-editor.es.js",
-      "require": "./dist/embeddable-code-editor.umd.js",
+      "import": "./dist/embedacode.es.js",
+      "require": "./dist/embedacode.umd.js",
       "types": "./dist/index.d.ts"
     },
-    "./standalone": "./dist/embeddable-code-editor.standalone.js"
+    "./standalone": "./dist/embedacode.standalone.js"
   },
   "files": [
     "dist"
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikehenken/embeddable-code-editor.git"
+    "url": "https://github.com/mikehenken/embedacode.git"
   },
   "scripts": {
     "dev": "vite",
@@ -40,7 +40,13 @@
     "lit",
     "prismjs",
     "syntax-highlighter",
-    "code-editor"
+    "code-editor",
+    "embedacode",
+    "github",
+    "documentation",
+    "blog",
+    "tutorial",
+    "code-snippets"
   ],
   "license": "MIT",
   "dependencies": {

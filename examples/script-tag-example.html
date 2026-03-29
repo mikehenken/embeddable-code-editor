@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Embeddable Syntax Highlighter — Script Tag Example</title>
+  <title>Embeda Code — Script Tag Example</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -40,15 +40,15 @@
     }
   </style>
 
-  <script src="../dist/embeddable-code-editor.standalone.js"></script>
+  <script src="../dist/embedacode.standalone.js"></script>
 </head>
 <body>
   <div class="page">
-    <h1>Embeddable Syntax Highlighter</h1>
+    <h1>Embeda Code</h1>
     <p class="subtitle">Read-only file tree + syntax highlighting. Load via script tag.</p>
 
     <div class="editor-wrapper">
-      <embeddable-code-editor id="my-editor"></embeddable-code-editor>
+      <embeda-code id="my-editor"></embeda-code>
     </div>
   </div>
 
@@ -60,22 +60,22 @@
         files: [
           {
             path: 'src/index.ts',
-            content: `import { EmbeddableCodeEditor } from './embeddable-code-editor';\n\nexport { EmbeddableCodeEditor };\n`,
+            content: `import { EmbedaCode } from './editor/embeda-code';\n\nexport { EmbedaCode };\n`,
             language: 'typescript'
           },
           {
-            path: 'src/embeddable-code-editor.ts',
-            content: `import { LitElement, html, css } from 'lit';\nimport { customElement, property } from 'lit/decorators.js';\n\n@customElement('embeddable-code-editor')\nexport class EmbeddableCodeEditor extends LitElement {\n  @property() theme = 'dark';\n  \n  render() {\n    return html\`<div>Code Editor</div>\`;\n  }\n}\n`,
+            path: 'src/editor/embeda-code.ts',
+            content: `import { LitElement, html, css } from 'lit';\nimport { customElement, property } from 'lit/decorators.js';\n\n@customElement('embeda-code')\nexport class EmbedaCode extends LitElement {\n  @property() theme = 'dark';\n  \n  render() {\n    return html\`<div>Code Editor</div>\`;\n  }\n}\n`,
             language: 'typescript'
           },
           {
             path: 'package.json',
-            content: `{\n  "name": "embeddable-code-editor",\n  "version": "1.0.0",\n  "description": "A read-only code editor component"\n}\n`,
+            content: `{\n  "name": "embedacode",\n  "version": "1.0.0",\n  "description": "A read-only code editor component"\n}\n`,
             language: 'json'
           },
           {
             path: 'README.md',
-            content: `# Embeddable Code Editor\n\nA web component for displaying code with a file tree.\n\n## Usage\n\n\`\`\`html\n<embeddable-code-editor></embeddable-code-editor>\n\`\`\`\n`,
+            content: `# Embeda Code\n\nA web component for displaying code with a file tree.\n\n## Usage\n\n\`\`\`html\n<embeda-code></embeda-code>\n\`\`\`\n`,
             language: 'markdown'
           }
         ]

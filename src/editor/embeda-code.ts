@@ -17,13 +17,13 @@ import {
   type TreeNode,
 } from '../tree/file-tree';
 
-const THEME_STORAGE_KEY = 'embeddable-code-editor-theme';
+const THEME_STORAGE_KEY = 'embedacode-theme';
 
 /** After merge with local `files` overrides, hard cap (matches API cap by default). */
 const MAX_MERGED_REPO_FILES = MAX_REPO_FILES_FROM_API;
 
-@customElement('embeddable-code-editor')
-export class EmbeddableCodeEditor extends LitElement {
+@customElement('embeda-code')
+export class EmbedaCode extends LitElement {
   static styles = css`
     :host {
       display: block;
@@ -317,76 +317,74 @@ export class EmbeddableCodeEditor extends LitElement {
     }
 
     /*
-     * Word-wrap: one row per logical line. Inner body fills scrollport (min-height 100%) and
-     * paints a gutter stripe so background continues under short files / past the last row.
+     * Word wrap + aligned gutters: CSS Grid, one row per logical line.
+     * References: https://jaseg.de/blog/css-only-code-blocks/
+     * and https://stackoverflow.com/questions/43962371/align-code-line-numbers-with-css
+     * Lit: no whitespace text nodes between .code-grid-lineno and .code-grid-line (breaks the grid).
      */
-    .code-scroll-body--rows {
+    .code-grid {
+      display: grid;
+      grid-template-columns: minmax(min-content, max-content) minmax(0, 1fr);
+      grid-auto-rows: minmax(min-content, auto);
+      width: 100%;
+      box-sizing: border-box;
       min-height: 100%;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
+      padding: 12px 0 16px;
       align-items: stretch;
-      width: 100%;
-      padding-top: 12px;
-      padding-bottom: 16px;
-      --gutter-strip: calc(var(--line-gutter-digits, 3) * 1ch + 28px);
-      background: linear-gradient(
-        90deg,
-        var(--line-gutter-bg) 0 var(--gutter-strip),
-        var(--code-bg) var(--gutter-strip) 100%
-      );
+      column-gap: 0;
+      row-gap: 0;
+      background: var(--code-bg);
     }
 
-    .code-line-row {
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
-      min-width: 0;
-      width: 100%;
-    }
-
-    .line-num-cell {
-      flex: 0 0 auto;
+    .code-grid-lineno {
       box-sizing: border-box;
-      min-width: calc(var(--line-gutter-digits, 3) * 1ch + 28px);
+      margin: 0;
       padding: 0 10px 0 18px;
+      min-width: calc(var(--line-gutter-digits, 3) * 1ch + 28px);
       color: #858585;
       font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.6;
       user-select: none;
+      text-align: right;
+      background: var(--line-gutter-bg);
       display: flex;
       align-items: flex-start;
       justify-content: flex-end;
     }
 
-    :host([theme='light']) .line-num-cell {
+    :host([theme='light']) .code-grid-lineno {
       color: #6b7280;
     }
 
-    .line-code-cell {
-      flex: 1;
-      min-width: 0;
+    .code-grid-line {
+      box-sizing: border-box;
       margin: 0;
+      min-width: 0;
       padding: 0 20px 0 14px;
-      overflow: visible;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      word-break: break-word;
       font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
       font-size: 14px;
       line-height: 1.6;
       tab-size: 4;
       background: var(--code-bg);
-      border: none;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
-    .line-code-cell code {
+    .code-grid-line code {
+      margin: 0;
+      padding: 0;
       background: none;
       color: #d4d4d4;
+      white-space: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      tab-size: inherit;
     }
 
-    :host([theme='light']) .line-code-cell code {
+    :host([theme='light']) .code-grid-line code {
       color: #1e1e1e;
     }
 
@@ -1099,33 +1097,8 @@ export class EmbeddableCodeEditor extends LitElement {
             </div>
           </div>
           ${wrap && view.highlightedLineHtml
-            ? html`
-                <div class="code-wrapper">
-                  <div
-                    class="code-scroll-body--rows"
-                    style=${`--line-gutter-digits:${String(view.highlightedLineHtml.length).length}`}
-                  >
-                    ${view.highlightedLineHtml.map(
-                      (lineHtml, i) => html`
-                        <div class="code-line-row">
-                          <div class="line-num-cell" aria-hidden="true">${i + 1}</div>
-                          <pre class="line-code-cell">
-                            <code class="language-${lang}">${unsafeHTML(lineHtml)}</code>
-                          </pre>
-                        </div>
-                      `,
-                    )}
-                  </div>
-                </div>
-              `
-            : html`
-                <div class="code-wrapper">
-                  <pre class="line-numbers line-numbers--nowrap" aria-hidden="true">${view.lineNumbersText || '1'}</pre>
-                  <pre class="code-area code-area--nowrap">
-                    <code class="language-${lang}">${unsafeHTML(view.highlightedHtml)}</code>
-                  </pre>
-                </div>
-              `}
+            ? html`<div class="code-wrapper"><div class="code-grid" style=${`--line-gutter-digits:${String(view.highlightedLineHtml.length).length}`}>${view.highlightedLineHtml.map((lineHtml, i) => html`<span class="code-grid-lineno" aria-hidden="true">${i + 1}</span><div class="code-grid-line"><code class="language-${lang}">${unsafeHTML(lineHtml)}</code></div>`)}</div></div>`
+            : html`<div class="code-wrapper"><pre class="line-numbers line-numbers--nowrap" aria-hidden="true">${view.lineNumbersText || '1'}</pre><pre class="code-area code-area--nowrap"><code class="language-${lang}">${unsafeHTML(view.highlightedHtml)}</code></pre></div>`}
           ${showDesc
             ? html`
                 <div class="description-panel" data-testid="description-panel">${file.description}</div>
@@ -1139,6 +1112,6 @@ export class EmbeddableCodeEditor extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'embeddable-code-editor': EmbeddableCodeEditor;
+    'embeda-code': EmbedaCode;
   }
 }

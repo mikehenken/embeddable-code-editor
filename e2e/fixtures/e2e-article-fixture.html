@@ -8,15 +8,15 @@
     body { font-family: system-ui, sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; }
     .editor-wrapper { height: 320px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
   </style>
-  <script src="/dist/embeddable-code-editor.standalone.js"></script>
+  <script src="/dist/embedacode.standalone.js"></script>
 </head>
 <body>
   <h1>Article-style fixture (two editors)</h1>
   <div class="editor-wrapper">
-    <embeddable-code-editor id="article-editor-a"></embeddable-code-editor>
+    <embeda-code id="article-editor-a"></embeda-code>
   </div>
   <div class="editor-wrapper">
-    <embeddable-code-editor id="article-editor-b"></embeddable-code-editor>
+    <embeda-code id="article-editor-b"></embeda-code>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -25,7 +25,7 @@
         files: [
           {
             path: 'src/index.ts',
-            content: 'export { EmbeddableCodeEditor } from "./embeddable-code-editor";\n',
+            content: 'export { EmbedaCode } from "./editor/embeda-code";\n',
             language: 'typescript',
             description: 'Entry point; re-exports the web component.'
           },

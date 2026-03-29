@@ -6,9 +6,9 @@ export default defineConfig({
     emptyOutDir: false,
     lib: {
       entry: 'src/index.ts',
-      name: 'EmbeddableCodeEditor',
+      name: 'EmbedaCode',
       formats: ['umd'],
-      fileName: () => `embeddable-code-editor.standalone.js`
+      fileName: () => `embedacode.standalone.js`
     }
   }
 });

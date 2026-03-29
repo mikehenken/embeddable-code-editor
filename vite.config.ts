@@ -6,9 +6,9 @@ export default defineConfig({
     emptyOutDir: false,
     lib: {
       entry: 'src/index.ts',
-      name: 'EmbeddableCodeEditor',
+      name: 'EmbedaCode',
       formats: ['es', 'umd'],
-      fileName: (format) => `embeddable-code-editor.${format}.js`
+      fileName: (format) => `embedacode.${format}.js`
     },
     rollupOptions: {
       external: ['lit', 'lit/decorators.js', 'lit/directives/class-map.js', 'prismjs'],
