@@ -6,7 +6,7 @@
 import { test, expect, type Locator } from '@playwright/test';
 
 async function expandTreeFolder(editor: Locator, folderName: string): Promise<void> {
-  await editor.locator('.tree-dir-label').getByText(folderName, { exact: true }).click();
+  await editor.locator('.tree-row.dir-row').getByText(folderName, { exact: true }).click();
 }
 
 test.describe('Embed via script tag', () => {
@@ -27,10 +27,10 @@ test.describe('Embed via script tag', () => {
     // Sidebar with file list (from config set in example script)
     const sidebar = editor.locator('.sidebar');
     await expect(sidebar).toBeVisible();
-    await expect(editor.locator('.file-item')).toHaveCount(2);
+    await expect(editor.locator('.tree-row.file-row')).toHaveCount(2);
     await expect(editor.locator('text=package.json')).toBeVisible();
     await expandTreeFolder(editor, 'src');
-    await expect(editor.locator('.file-item')).toHaveCount(4);
+    await expect(editor.locator('.tree-row.file-row')).toHaveCount(4);
     await expect(editor.locator('text=src/index.ts')).toBeVisible();
   });
 

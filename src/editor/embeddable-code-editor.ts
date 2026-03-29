@@ -7,10 +7,13 @@ import { fetchGitHubRepo, MAX_REPO_FILES_FROM_API } from '../github/github-fetch
 import type { EditorConfig, EditorFile } from '../types';
 import {
   buildFileTree,
+  filterTreeNodes,
   initialExpandedDirKeys,
   isRemoteContentString,
   mergeFileLists,
   normalizePath,
+  parentDirKeysForFilePath,
+  resolveInitialFileIndex,
   type TreeNode,
 } from '../tree/file-tree';
 
@@ -25,16 +28,23 @@ export class EmbeddableCodeEditor extends LitElement {
     :host {
       display: block;
       font-family: system-ui, -apple-system, sans-serif;
-      --sidebar-bg: #1a1d23;
-      --sidebar-active: #2d3139;
-      --sidebar-accent: #3b82f6;
-      --code-bg: #1e1e1e;
-      --line-gutter-bg: #252526;
-      --toolbar-bg: #252830;
-      --border-subtle: rgba(255, 255, 255, 0.06);
-      --text-muted: #94a3b8;
-      --text-primary: #e2e8f0;
-      --panel-bg: #1e293b;
+      /* One chrome strip: repo header + editor toolbar share bg + bottom rule */
+      --chrome-bg: #161b22;
+      --chrome-border: #30363d;
+      --shell-bg: #0d1117;
+      --sidebar-bg: var(--shell-bg);
+      --sidebar-active: #21262d;
+      --sidebar-active-strong: #30363d;
+      --sidebar-accent: #388bfd;
+      --tree-icon-muted: #7d8590;
+      --tree-text: #e6edf3;
+      --code-bg: var(--shell-bg);
+      --line-gutter-bg: #161b22;
+      --toolbar-bg: var(--chrome-bg);
+      --border-subtle: #30363d;
+      --text-muted: #8b949e;
+      --text-primary: #e6edf3;
+      --panel-bg: #161b22;
       border-radius: 12px;
       overflow: hidden;
       height: 400px;
@@ -42,16 +52,22 @@ export class EmbeddableCodeEditor extends LitElement {
     }
 
     :host([theme='light']) {
-      --sidebar-bg: #f1f5f9;
-      --sidebar-active: #e2e8f0;
-      --sidebar-accent: #2563eb;
-      --code-bg: #fafafa;
-      --line-gutter-bg: #ececec;
-      --toolbar-bg: #e8e8e8;
-      --border-subtle: rgba(0, 0, 0, 0.08);
-      --text-muted: #64748b;
-      --text-primary: #0f172a;
-      --panel-bg: #e2e8f0;
+      --chrome-bg: #f6f8fa;
+      --chrome-border: #d0d7de;
+      --shell-bg: #ffffff;
+      --sidebar-bg: var(--shell-bg);
+      --sidebar-active: #eaeef2;
+      --sidebar-active-strong: #d0d7de;
+      --sidebar-accent: #0969da;
+      --tree-icon-muted: #57606a;
+      --tree-text: #1f2328;
+      --code-bg: var(--shell-bg);
+      --line-gutter-bg: #f6f8fa;
+      --toolbar-bg: var(--chrome-bg);
+      --border-subtle: #d0d7de;
+      --text-muted: #57606a;
+      --text-primary: #1f2328;
+      --panel-bg: #f6f8fa;
     }
 
     :host([fullscreen]) {
@@ -79,19 +95,22 @@ export class EmbeddableCodeEditor extends LitElement {
     }
 
     .sidebar {
-      width: 220px;
-      min-width: 180px;
+      width: 260px;
+      min-width: 200px;
       background: var(--sidebar-bg);
-      border-right: 1px solid var(--border-subtle);
-      overflow-y: auto;
+      border-right: 1px solid var(--chrome-border);
       display: flex;
       flex-direction: column;
+      min-height: 0;
     }
 
     .sidebar-header {
       flex-shrink: 0;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border-subtle);
+      box-sizing: border-box;
+      min-height: 44px;
+      padding: 0 12px;
+      background: var(--chrome-bg);
+      border-bottom: 1px solid var(--chrome-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -99,9 +118,9 @@ export class EmbeddableCodeEditor extends LitElement {
     }
 
     .sidebar-header-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--tree-text);
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -112,7 +131,7 @@ export class EmbeddableCodeEditor extends LitElement {
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      color: var(--text-muted);
+      color: var(--tree-icon-muted);
     }
 
     .sidebar-header-link a {
@@ -125,54 +144,108 @@ export class EmbeddableCodeEditor extends LitElement {
       color: var(--sidebar-accent);
     }
 
+    .tree-search-wrap {
+      flex-shrink: 0;
+      box-sizing: border-box;
+      padding: 12px;
+      border-bottom: 1px solid var(--chrome-border);
+    }
+
+    .tree-search-input {
+      width: 100%;
+      box-sizing: border-box;
+      display: block;
+      margin: 0;
+      padding: 8px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      border-radius: 6px;
+      border: 1px solid var(--chrome-border);
+      background: var(--shell-bg);
+      color: var(--tree-text);
+      outline: none;
+    }
+
+    .tree-search-input::placeholder {
+      color: var(--tree-icon-muted);
+    }
+
+    .tree-search-input:focus {
+      border-color: var(--sidebar-accent);
+      box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.2);
+    }
+
+    :host([theme='light']) .tree-search-input:focus {
+      box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.2);
+    }
+
     .tree-scroll {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
+      padding: 8px 12px 12px;
+      box-sizing: border-box;
     }
 
-    .tree-dir-label {
-      padding: 6px 12px 6px 8px;
-      cursor: pointer;
-      font-size: 12px;
-      color: var(--text-muted);
-      user-select: none;
+    .tree-row {
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-
-    .tree-dir-label:hover {
-      background: var(--sidebar-active);
-      color: var(--text-primary);
-    }
-
-    .chevron {
-      font-size: 9px;
-      width: 12px;
-      flex-shrink: 0;
-    }
-
-    .file-item {
-      padding: 8px 12px 8px 8px;
+      min-height: 28px;
+      padding: 2px 8px 2px 6px;
+      margin: 1px 0;
+      border-radius: 6px;
+      border-left: 3px solid transparent;
       cursor: pointer;
       font-size: 12px;
-      color: var(--text-muted);
-      border-left: 3px solid transparent;
-      transition: background 0.15s, color 0.15s;
-      word-break: break-all;
+      line-height: 1.35;
+      color: var(--tree-text);
+      user-select: none;
+      transition: background 0.12s ease;
     }
 
-    .file-item:hover {
+    .tree-row:hover {
       background: var(--sidebar-active);
-      color: var(--text-primary);
     }
 
-    .file-item.active {
-      background: var(--sidebar-active);
-      color: var(--text-primary);
-      font-weight: 500;
+    .tree-row.is-active {
+      background: var(--sidebar-active-strong);
       border-left-color: var(--sidebar-accent);
+      font-weight: 500;
+    }
+
+    .tree-chevron-slot {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tree-chevron-svg {
+      color: var(--tree-icon-muted);
+      transition: transform 0.15s ease;
+    }
+
+    .tree-chevron-svg.is-open {
+      transform: rotate(90deg);
+    }
+
+    .tree-row-icon {
+      flex-shrink: 0;
+      color: var(--tree-icon-muted);
+    }
+
+    .tree-row.is-active .tree-row-icon {
+      color: var(--sidebar-accent);
+    }
+
+    .tree-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .main-area {
@@ -187,12 +260,14 @@ export class EmbeddableCodeEditor extends LitElement {
 
     .toolbar {
       flex-shrink: 0;
+      box-sizing: border-box;
+      min-height: 44px;
+      padding: 0 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 12px;
-      background: var(--toolbar-bg);
-      border-bottom: 1px solid var(--border-subtle);
+      background: var(--chrome-bg);
+      border-bottom: 1px solid var(--chrome-border);
       gap: 8px;
     }
 
@@ -241,6 +316,80 @@ export class EmbeddableCodeEditor extends LitElement {
       background: var(--code-bg);
     }
 
+    /*
+     * Word-wrap: one row per logical line. Inner body fills scrollport (min-height 100%) and
+     * paints a gutter stripe so background continues under short files / past the last row.
+     */
+    .code-scroll-body--rows {
+      min-height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      padding-top: 12px;
+      padding-bottom: 16px;
+      --gutter-strip: calc(var(--line-gutter-digits, 3) * 1ch + 28px);
+      background: linear-gradient(
+        90deg,
+        var(--line-gutter-bg) 0 var(--gutter-strip),
+        var(--code-bg) var(--gutter-strip) 100%
+      );
+    }
+
+    .code-line-row {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .line-num-cell {
+      flex: 0 0 auto;
+      box-sizing: border-box;
+      min-width: calc(var(--line-gutter-digits, 3) * 1ch + 28px);
+      padding: 0 10px 0 18px;
+      color: #858585;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      user-select: none;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+    }
+
+    :host([theme='light']) .line-num-cell {
+      color: #6b7280;
+    }
+
+    .line-code-cell {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      padding: 0 20px 0 14px;
+      overflow: visible;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      tab-size: 4;
+      background: var(--code-bg);
+      border: none;
+    }
+
+    .line-code-cell code {
+      background: none;
+      color: #d4d4d4;
+    }
+
+    :host([theme='light']) .line-code-cell code {
+      color: #1e1e1e;
+    }
+
     .line-numbers {
       flex-shrink: 0;
       margin: 0;
@@ -278,6 +427,15 @@ export class EmbeddableCodeEditor extends LitElement {
 
     :host([theme='light']) .code-area code {
       color: #1e1e1e;
+    }
+
+    .code-area--nowrap,
+    .code-area--nowrap code {
+      white-space: pre;
+    }
+
+    .line-numbers--nowrap {
+      white-space: pre;
     }
 
     .token.comment,
@@ -372,6 +530,9 @@ export class EmbeddableCodeEditor extends LitElement {
   @state()
   private expandedDirs: Set<string> = new Set();
 
+  @state()
+  private treeFilter = '';
+
   /** Cached tree for sidebar; avoids rebuilding on every render for large repos. */
   private treeNodes: TreeNode[] = [];
 
@@ -438,8 +599,38 @@ export class EmbeddableCodeEditor extends LitElement {
     this.treeNodes = buildFileTree(this._files);
   }
 
-  private applyTreeExpansionForCurrentFiles(): void {
-    this.expandedDirs = initialExpandedDirKeys();
+  private applyInitialFileSelection(): void {
+    if (this._files.length === 0) {
+      this.activeFileIndex = 0;
+      return;
+    }
+    const idx = resolveInitialFileIndex(this._files, this.config);
+    this.activeFileIndex = idx;
+    const path = this._files[idx]?.path;
+    if (!path) {
+      return;
+    }
+    const keys = parentDirKeysForFilePath(path);
+    if (keys.length === 0) {
+      return;
+    }
+    const next = new Set(this.expandedDirs);
+    for (const k of keys) {
+      next.add(k);
+    }
+    this.expandedDirs = next;
+  }
+
+  private isWordWrap(): boolean {
+    return this.config.wordWrap !== false;
+  }
+
+  private treeFilterActive(): boolean {
+    return this.treeFilter.trim().length > 0;
+  }
+
+  private visibleTreeNodes(): TreeNode[] {
+    return filterTreeNodes(this.treeNodes, this.treeFilter);
   }
 
   private getRemoteCacheMaxEntries(): number {
@@ -497,8 +688,8 @@ export class EmbeddableCodeEditor extends LitElement {
       this._repoError = null;
       this.repoLoading = false;
       this.syncTreeFromFiles();
-      this.applyTreeExpansionForCurrentFiles();
-      this.clampActiveIndex();
+      this.expandedDirs = initialExpandedDirKeys();
+      this.applyInitialFileSelection();
       return;
     }
 
@@ -506,7 +697,7 @@ export class EmbeddableCodeEditor extends LitElement {
     this._repoError = null;
     this._files = [];
     this.syncTreeFromFiles();
-    this.applyTreeExpansionForCurrentFiles();
+    this.expandedDirs = initialExpandedDirKeys();
     const seq = this.loadSeq;
 
     void (async () => {
@@ -532,22 +723,12 @@ export class EmbeddableCodeEditor extends LitElement {
         if (seq === this.loadSeq) {
           this.repoLoading = false;
           this.syncTreeFromFiles();
-          this.applyTreeExpansionForCurrentFiles();
-          this.clampActiveIndex();
+          this.expandedDirs = initialExpandedDirKeys();
+          this.applyInitialFileSelection();
           this.requestUpdate();
         }
       }
     })();
-  }
-
-  private clampActiveIndex(): void {
-    if (this._files.length === 0) {
-      this.activeFileIndex = 0;
-      return;
-    }
-    if (this.activeFileIndex >= this._files.length) {
-      this.activeFileIndex = 0;
-    }
   }
 
   override willUpdate(changed: PropertyValues): void {
@@ -748,18 +929,36 @@ export class EmbeddableCodeEditor extends LitElement {
   }
 
   private renderTreeNodes(nodes: TreeNode[], depth: number): TemplateResult {
+    const filterOn = this.treeFilterActive();
     return html`${nodes.map((n) => {
       if (n.kind === 'dir') {
-        const open = this.expandedDirs.has(n.pathKey);
+        const open = filterOn || this.expandedDirs.has(n.pathKey);
         return html`
           <div class="tree-dir">
             <div
-              class="tree-dir-label"
-              style=${`padding-left:${8 + depth * 12}px`}
+              class="tree-row dir-row"
+              style=${`padding-left:${6 + depth * 12}px`}
+              title=${n.pathKey || n.name}
               @click=${() => this.toggleDir(n.pathKey)}
             >
-              <span class="chevron">${open ? '▼' : '▶'}</span>
-              <span>${n.name}</span>
+              <span class="tree-chevron-slot">
+                <svg
+                  class="tree-chevron-svg ${open ? 'is-open' : ''}"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  aria-hidden="true"
+                >
+                  <path fill="currentColor" d="M4 2 L9 6 L4 10 Z" />
+                </svg>
+              </span>
+              <svg class="tree-row-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M1.75 3A1.25 1.25 0 0 0 .5 4.25v9.5C.5 14.44 1.06 15 1.75 15h12.5c.69 0 1.25-.56 1.25-1.25v-7c0-.69-.56-1.25-1.25-1.25H8.06L6.56 4.25A1.25 1.25 0 0 0 5.31 3.5H1.75Z"
+                />
+              </svg>
+              <span class="tree-label">${n.name}</span>
             </div>
             ${open ? this.renderTreeNodes(n.children, depth + 1) : nothing}
           </div>
@@ -767,12 +966,21 @@ export class EmbeddableCodeEditor extends LitElement {
       }
       return html`
         <div
-          class="file-item ${n.fileIndex === this.activeFileIndex ? 'active' : ''}"
-          style=${`padding-left:${8 + depth * 12}px`}
+          class="tree-row file-row ${n.fileIndex === this.activeFileIndex ? 'is-active' : ''}"
+          style=${`padding-left:${6 + depth * 12}px`}
+          title=${n.path}
           data-testid=${`file-item-${n.fileIndex}`}
           @click=${() => this.selectFile(n.fileIndex)}
         >
-          ${n.path}
+          <span class="tree-chevron-slot" aria-hidden="true"></span>
+          <svg class="tree-row-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              fill="currentColor"
+              fill-rule="evenodd"
+              d="M4 1.25A1.25 1.25 0 0 1 5.25 0h4.88c.33 0 .65.13.88.37l2.12 2.12c.24.23.37.55.37.88V14.75A1.25 1.25 0 0 1 12.25 16h-8A1.25 1.25 0 0 1 3 14.75v-13Zm1.25-.5a.5.5 0 0 0-.5.5V4h4.25a.5.5 0 0 0 .5-.5V.75H5.5ZM9 5H4.5v9.25a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V5.5a.5.5 0 0 0-.5-.5H9Z"
+            />
+          </svg>
+          <span class="tree-label">${n.name}</span>
         </div>
       `;
     })}`;
@@ -806,7 +1014,9 @@ export class EmbeddableCodeEditor extends LitElement {
       this.config.showFileDescription !== false && Boolean(file.description?.trim());
 
     const display = this.getDisplayContent(file);
-    const { highlightedHtml, lineNumbersText } = prepareCodeView(display, file.language || 'javascript');
+    const lang = file.language || 'javascript';
+    const wrap = this.isWordWrap();
+    const view = prepareCodeView(display, lang, { perLine: wrap });
 
     const title = this.getHeaderTitle();
     const repoHref = this.getHeaderRepoHref();
@@ -818,13 +1028,14 @@ export class EmbeddableCodeEditor extends LitElement {
             ? html`
                 <div class="sidebar-header" data-testid="sidebar-header">
                   ${title
-                    ? html`<span class="sidebar-header-title">${title}</span>`
+                    ? html`<span class="sidebar-header-title" title=${title}>${title}</span>`
                     : html`<span class="sidebar-header-title"></span>`}
                   ${repoHref
                     ? html`
                         <span class="sidebar-header-link">
                           <a
                             href=${repoHref}
+                            title=${repoHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="Open repository on GitHub"
@@ -843,7 +1054,22 @@ export class EmbeddableCodeEditor extends LitElement {
                 </div>
               `
             : nothing}
-          <div class="tree-scroll">${this.renderTreeNodes(this.treeNodes, 0)}</div>
+          <div class="tree-search-wrap">
+            <input
+              type="search"
+              class="tree-search-input"
+              placeholder="Go to file"
+              spellcheck="false"
+              autocomplete="off"
+              aria-label="Filter files"
+              data-testid="tree-filter-input"
+              .value=${this.treeFilter}
+              @input=${(e: Event) => {
+                this.treeFilter = (e.target as HTMLInputElement).value;
+              }}
+            />
+          </div>
+          <div class="tree-scroll">${this.renderTreeNodes(this.visibleTreeNodes(), 0)}</div>
         </div>
         <div class="main-area">
           <div class="toolbar">
@@ -872,10 +1098,34 @@ export class EmbeddableCodeEditor extends LitElement {
               </button>
             </div>
           </div>
-          <div class="code-wrapper">
-            <pre class="line-numbers" aria-hidden="true">${lineNumbersText || '1'}</pre>
-            <pre class="code-area"><code class="language-${file.language || 'javascript'}">${unsafeHTML(highlightedHtml)}</code></pre>
-          </div>
+          ${wrap && view.highlightedLineHtml
+            ? html`
+                <div class="code-wrapper">
+                  <div
+                    class="code-scroll-body--rows"
+                    style=${`--line-gutter-digits:${String(view.highlightedLineHtml.length).length}`}
+                  >
+                    ${view.highlightedLineHtml.map(
+                      (lineHtml, i) => html`
+                        <div class="code-line-row">
+                          <div class="line-num-cell" aria-hidden="true">${i + 1}</div>
+                          <pre class="line-code-cell">
+                            <code class="language-${lang}">${unsafeHTML(lineHtml)}</code>
+                          </pre>
+                        </div>
+                      `,
+                    )}
+                  </div>
+                </div>
+              `
+            : html`
+                <div class="code-wrapper">
+                  <pre class="line-numbers line-numbers--nowrap" aria-hidden="true">${view.lineNumbersText || '1'}</pre>
+                  <pre class="code-area code-area--nowrap">
+                    <code class="language-${lang}">${unsafeHTML(view.highlightedHtml)}</code>
+                  </pre>
+                </div>
+              `}
           ${showDesc
             ? html`
                 <div class="description-panel" data-testid="description-panel">${file.description}</div>

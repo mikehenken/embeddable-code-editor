@@ -49,7 +49,7 @@ Heavier example: [examples/script-tag-example.html](https://github.com/mikehenke
 Pinned release asset (no npm):
 
 ```html
-<script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.2.0/embeddable-code-editor.standalone.js"></script>
+<script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.3.4/embeddable-code-editor.standalone.js"></script>
 ```
 
 ## npm / bundler
@@ -82,6 +82,8 @@ Import registers the custom element; no default export. Set `element.config` aft
 | `showFileDescription` | `false` hides the description strip entirely |
 | `sidebarHeader` | Optional `{ title?, repoUrl? }` above the tree |
 | `remoteCacheMaxEntries` | How many URL-fetched bodies to keep (default `1`; raise for a small LRU) |
+| `wordWrap` | Long lines wrap in the code pane (default `true`; set `false` for horizontal scroll). When `true`, each logical line is its own row so line numbers stay aligned with wrapped text. |
+| `defaultFile` | Normalized path to open first (e.g. `README.md`). If omitted and `repoUrl` is set, root `README.md` is opened when present |
 
 ## GitHub repos
 
@@ -92,7 +94,9 @@ editor.config = {
 };
 ```
 
-Tree API is capped at **2500** entries client-side. Folders start **collapsed** so big repos stay usable.
+Tree API is capped at **2500** entries client-side. Folders start **collapsed**; the initial file’s parent folders expand automatically. With `repoUrl` and no `defaultFile`, the first **README.md** (root, then nested) is selected when it exists.
+
+The sidebar includes a **Go to file** filter (substring match on paths and names).
 
 Unauthenticated API calls count against GitHub’s **60/hour** limit; heavy sites should proxy with a token. Raw file fetches and the tree API are fine from the browser (CORS).
 

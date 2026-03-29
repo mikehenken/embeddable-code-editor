@@ -5,7 +5,7 @@
 import { test, expect, type Locator } from '@playwright/test';
 
 async function expandTreeFolder(editor: Locator, folderName: string): Promise<void> {
-  await editor.locator('.tree-dir-label').getByText(folderName, { exact: true }).click();
+  await editor.locator('.tree-row.dir-row').getByText(folderName, { exact: true }).click();
 }
 
 test.describe('Component E2E', () => {
@@ -15,11 +15,11 @@ test.describe('Component E2E', () => {
     await expect(editor).toBeVisible();
     const sidebar = editor.locator('.sidebar');
     await expect(sidebar).toBeVisible();
-    await expect(editor.locator('.tree-dir-label').getByText('src', { exact: true })).toBeVisible();
-    await expect(editor.locator('.file-item')).toHaveCount(1);
+    await expect(editor.locator('.tree-row.dir-row').getByText('src', { exact: true })).toBeVisible();
+    await expect(editor.locator('.tree-row.file-row')).toHaveCount(1);
     await expect(editor.locator('text=README.md')).toBeVisible();
     await expandTreeFolder(editor, 'src');
-    await expect(editor.locator('.file-item')).toHaveCount(3);
+    await expect(editor.locator('.tree-row.file-row')).toHaveCount(3);
     await expect(editor.locator('text=src/index.ts')).toBeVisible();
     await expect(editor.locator('text=src/example.js')).toBeVisible();
   });

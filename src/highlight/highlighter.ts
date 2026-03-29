@@ -27,14 +27,43 @@ export function highlight(code: string, language: string = 'javascript'): string
   return Prism.highlight(code, grammar, language);
 }
 
+export interface PrepareCodeViewOptions {
+  /**
+   * Highlight each line separately so the editor can use one row per logical line.
+   * Required for `pre-wrap` layouts: a shared two-`pre` gutter cannot track wrapped line height.
+   */
+  perLine?: boolean;
+}
+
+export interface PrepareCodeViewResult {
+  /** Full-file highlight for the side-by-side `pre` layout (no wrap). */
+  highlightedHtml: string;
+  /** Newline-separated line numbers for the side-by-side `pre` layout. */
+  lineNumbersText: string;
+  /** One HTML fragment per logical line when `perLine` was requested; otherwise `null`. */
+  highlightedLineHtml: string[] | null;
+}
+
+function highlightLineSafe(line: string, language: string): string {
+  if (line.length > MAX_PRISM_CHARS) {
+    return escapeHtml(line);
+  }
+  try {
+    return highlight(line, language);
+  } catch {
+    return escapeHtml(line);
+  }
+}
+
 /**
  * Clamps size, builds line gutter text, and highlights safely for the embedded viewer.
  * Output is safe to pass to Lit's unsafeHTML when using the returned HTML string.
  */
-export function prepareCodeView(raw: string, language: string = 'javascript'): {
-  highlightedHtml: string;
-  lineNumbersText: string;
-} {
+export function prepareCodeView(
+  raw: string,
+  language: string = 'javascript',
+  options?: PrepareCodeViewOptions,
+): PrepareCodeViewResult {
   let text = raw;
   if (text.length > MAX_VIEW_BYTES) {
     text =
@@ -49,6 +78,15 @@ export function prepareCodeView(raw: string, language: string = 'javascript'): {
   const body = capped.join('\n');
   const lineNumbersText = capped.map((_, i) => String(i + 1)).join('\n');
 
+  if (options?.perLine) {
+    const highlightedLineHtml = capped.map((line) => highlightLineSafe(line, language));
+    return {
+      highlightedHtml: '',
+      lineNumbersText,
+      highlightedLineHtml,
+    };
+  }
+
   let highlightedHtml: string;
   if (body.length > MAX_PRISM_CHARS) {
     highlightedHtml = escapeHtml(body);
@@ -59,5 +97,5 @@ export function prepareCodeView(raw: string, language: string = 'javascript'): {
       highlightedHtml = escapeHtml(body);
     }
   }
-  return { highlightedHtml, lineNumbersText };
+  return { highlightedHtml, lineNumbersText, highlightedLineHtml: null };
 }

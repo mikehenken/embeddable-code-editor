@@ -1,6 +1,33 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import * as GitHub from '../github/github-fetcher';
 import './embeddable-code-editor';
 import { EmbeddableCodeEditor } from './embeddable-code-editor';
+
+function codePaneText(root: ShadowRoot | null | undefined): string {
+  if (!root) {
+    return '';
+  }
+  const cells = root.querySelector('.code-scroll-body--rows')?.querySelectorAll('.line-code-cell');
+  if (cells && cells.length > 0) {
+    return Array.from(cells)
+      .map((n) => n.textContent ?? '')
+      .join('\n');
+  }
+  return root.querySelector('.code-area')?.textContent ?? '';
+}
+
+function codePaneHtml(root: ShadowRoot | null | undefined): string {
+  if (!root) {
+    return '';
+  }
+  const cells = root.querySelector('.code-scroll-body--rows')?.querySelectorAll('.line-code-cell');
+  if (cells && cells.length > 0) {
+    return Array.from(cells)
+      .map((n) => n.innerHTML)
+      .join('');
+  }
+  return root.querySelector('.code-area')?.innerHTML ?? '';
+}
 
 describe('EmbeddableCodeEditor', () => {
   let element: EmbeddableCodeEditor;
@@ -41,8 +68,7 @@ describe('EmbeddableCodeEditor', () => {
     await element.updateComplete;
 
     expect(element.shadowRoot?.querySelector('.description-panel')).toBeNull();
-    const codeArea = element.shadowRoot?.querySelector('.code-area');
-    expect(codeArea?.innerHTML).toContain('margin');
+    expect(codePaneHtml(element.shadowRoot)).toContain('margin');
   });
 
   it('hides description panel when showFileDescription is false', async () => {
@@ -91,9 +117,8 @@ describe('EmbeddableCodeEditor', () => {
       'https://example.com/remote.js',
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
-    const codeArea = element.shadowRoot?.querySelector('.code-area');
-    expect(codeArea?.textContent).toContain('remote');
-    expect(codeArea?.textContent).not.toContain('Loading...');
+    expect(codePaneText(element.shadowRoot)).toContain('remote');
+    expect(codePaneText(element.shadowRoot)).not.toContain('Loading...');
   });
 
   it('refetches remote file when revisiting after switch (default remoteCacheMaxEntries)', async () => {
@@ -184,9 +209,8 @@ describe('EmbeddableCodeEditor', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 30));
 
-    const codeArea = element.shadowRoot?.querySelector('.code-area');
-    expect(codeArea?.textContent).toContain('Error loading content');
-    expect(codeArea?.textContent).toContain('404');
+    expect(codePaneText(element.shadowRoot)).toContain('Error loading content');
+    expect(codePaneText(element.shadowRoot)).toContain('404');
   });
 
   it('shows error when remote URL fetch throws', async () => {
@@ -200,9 +224,8 @@ describe('EmbeddableCodeEditor', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 30));
 
-    const codeArea = element.shadowRoot?.querySelector('.code-area');
-    expect(codeArea?.textContent).toContain('Error loading content');
-    expect(codeArea?.textContent).toContain('Network error');
+    expect(codePaneText(element.shadowRoot)).toContain('Error loading content');
+    expect(codePaneText(element.shadowRoot)).toContain('Network error');
   });
 
   it('toggles fullscreen on button click (expand and exit)', async () => {
@@ -334,5 +357,47 @@ describe('EmbeddableCodeEditor', () => {
     expect(createObjectURL).toHaveBeenCalled();
     const blob = (createObjectURL as ReturnType<typeof vi.fn>).mock.calls[0][0] as Blob;
     expect(blob.size).toBeGreaterThan(0);
+  });
+
+  it('opens defaultFile when set', async () => {
+    element.config = {
+      defaultFile: 'README.md',
+      files: [
+        { path: 'a.js', content: 'aaa' },
+        { path: 'README.md', content: '# Doc body' },
+      ],
+    };
+    await element.updateComplete;
+    expect(codePaneText(element.shadowRoot)).toContain('Doc body');
+    expect(codePaneText(element.shadowRoot)).not.toContain('aaa');
+  });
+
+  it('uses README.md first when repoUrl is set and defaultFile is unset', async () => {
+    vi.spyOn(GitHub, 'fetchGitHubRepo').mockResolvedValue([
+      { path: '0.txt', content: 'zero' },
+      { path: 'README.md', content: '# From repo' },
+    ]);
+    element.config = { repoUrl: 'https://github.com/owner/repo' };
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 80));
+    await element.updateComplete;
+    expect(codePaneText(element.shadowRoot)).toContain('From repo');
+    expect(codePaneText(element.shadowRoot)).not.toContain('zero');
+  });
+
+  it('uses per-line row layout when wordWrap is true so gutters track wrapped lines', async () => {
+    element.config = { files: [{ path: 'x.js', content: 'line1\nline2' }] };
+    await element.updateComplete;
+    expect(element.shadowRoot?.querySelector('.code-scroll-body--rows')).toBeTruthy();
+    expect(element.shadowRoot?.querySelectorAll('.code-line-row').length).toBe(2);
+    expect(element.shadowRoot?.querySelector('.code-area')).toBeNull();
+  });
+
+  it('uses dual-pre layout with nowrap when wordWrap is false', async () => {
+    element.config = { wordWrap: false, files: [{ path: 'x.js', content: 'y' }] };
+    await element.updateComplete;
+    const pre = element.shadowRoot?.querySelector('.code-area');
+    expect(pre?.classList.contains('code-area--nowrap')).toBe(true);
+    expect(element.shadowRoot?.querySelector('.code-scroll-body--rows')).toBeNull();
   });
 });

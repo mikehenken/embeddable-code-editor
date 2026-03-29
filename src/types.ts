@@ -31,4 +31,14 @@ export interface EditorConfig {
    * Set higher (e.g. `8`) for a small LRU cache so back-navigation avoids refetch.
    */
   remoteCacheMaxEntries?: number;
+  /**
+   * Wrap long lines in the code view (`pre-wrap`).
+   * Default: true. Set to `false` for horizontal scrolling only.
+   */
+  wordWrap?: boolean;
+  /**
+   * Path of the file to open first (normalized like `README.md` or `src/index.ts`).
+   * If missing and `repoUrl` is set, the first `README.md` (root, then nested) is selected when present.
+   */
+  defaultFile?: string;
 }
