@@ -49,7 +49,7 @@ Heavier example: [examples/script-tag-example.html](https://github.com/mikehenke
 Pinned release asset (no npm):
 
 ```html
-<script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.1.0/embeddable-code-editor.standalone.js"></script>
+<script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.2.0/embeddable-code-editor.standalone.js"></script>
 ```
 
 ## npm / bundler

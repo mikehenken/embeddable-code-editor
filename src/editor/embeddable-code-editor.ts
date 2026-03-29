@@ -244,7 +244,7 @@ export class EmbeddableCodeEditor extends LitElement {
     .line-numbers {
       flex-shrink: 0;
       margin: 0;
-      padding: 0 12px 0 16px;
+      padding: 12px 16px 16px 18px;
       background: var(--line-gutter-bg);
       color: #858585;
       font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
@@ -262,7 +262,7 @@ export class EmbeddableCodeEditor extends LitElement {
       flex: 1;
       min-width: 0;
       margin: 0;
-      padding: 0 16px 0 0;
+      padding: 12px 20px 16px 14px;
       overflow: visible;
       font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
       font-size: 14px;
