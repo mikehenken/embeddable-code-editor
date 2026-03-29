@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { highlight, prepareCodeView } from './highlighter';
+import { highlight, prepareCodeView, normalizeEditorText } from './highlighter';
 
 describe('highlighter', () => {
   it('highlights javascript by default', () => {
@@ -27,5 +27,20 @@ describe('highlighter', () => {
     expect(r.highlightedLineHtml?.[0] ?? '').toContain('const');
     expect(r.highlightedLineHtml?.[1] ?? '').toContain('const');
     expect(r.highlightedHtml).toBe('');
+  });
+
+  it('prepareCodeView normalizes CRLF so lines do not carry stray carriage returns', () => {
+    const r = prepareCodeView('{\r\n  "a": 1\r\n}\r\n', 'json', { perLine: true });
+    // Trailing newline → final empty logical line
+    expect(r.highlightedLineHtml).toHaveLength(4);
+    for (const line of r.highlightedLineHtml ?? []) {
+      expect(line).not.toContain('\r');
+    }
+  });
+
+  it('normalizeEditorText strips BOM and normalizes newlines', () => {
+    const bom = '\ufeff{"x":1}';
+    expect(normalizeEditorText(bom)).toBe('{"x":1}');
+    expect(normalizeEditorText('a\rb')).toBe('a\nb');
   });
 });

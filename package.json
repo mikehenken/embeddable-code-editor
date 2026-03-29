@@ -1,7 +1,7 @@
 {
   "name": "@mikehenken/embedacode",
-  "version": "2.0.0",
-  "description": "Embed an entire GitHub repo in a blog article, tutorial, or course — read-only tree + syntax-highlighted code. Lit web component, scoped so it won't fight your site or app styling.",
+  "version": "2.1.0",
+  "description": "Read-only code viewer web component for blogs and docs: embed snippets or multi-file trees via JSON (no GitHub required), or optionally load a public GitHub repo. Lit + Prism, shadow-DOM scoped.",
   "type": "module",
   "main": "./dist/embedacode.umd.js",
   "module": "./dist/embedacode.es.js",

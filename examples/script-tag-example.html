@@ -3,23 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Embeda Code — Script Tag Example</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>Embedacode — Script tag example</title>
+  <!-- Intentionally no external fonts: avoids blocking window "load" in CI / compare with GitHub locally -->
   <style>
     * { box-sizing: border-box; }
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    html, body {
+      height: 100%;
       margin: 0;
-      padding: 2rem;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem 1.5rem 0;
       background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-      min-height: 100vh;
       color: #e2e8f0;
     }
     .page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       max-width: 1100px;
       margin: 0 auto;
+      width: 100%;
     }
     h1 {
       margin: 0 0 0.5rem;
@@ -30,13 +37,21 @@
     .subtitle {
       color: #94a3b8;
       font-size: 0.95rem;
-      margin-bottom: 1.5rem;
+      margin: 0 0 1rem;
+      line-height: 1.5;
+      flex-shrink: 0;
     }
     .editor-wrapper {
-      height: 520px;
+      flex: 1;
+      min-height: 280px;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+    .editor-wrapper embeda-code {
+      display: block;
+      height: 100%;
+      min-height: 0;
     }
   </style>
 
@@ -44,11 +59,16 @@
 </head>
 <body>
   <div class="page">
-    <h1>Embeda Code</h1>
-    <p class="subtitle">Read-only file tree + syntax highlighting. Load via script tag.</p>
+    <h1>Embedacode</h1>
+    <p class="subtitle">
+      Loads <code>microsoft/TypeScript</code> from GitHub (branch <code>main</code>) and opens
+      <code>src/compiler/core.ts</code> first. Uses the standalone script bundle like a real embed.
+      You need a network connection; the GitHub API applies rate limits to unauthenticated requests.
+      <a href="github-repo-example.html" style="color:#7dd3fc;">Minimal HTML example</a> (same settings, no page chrome).
+    </p>
 
     <div class="editor-wrapper">
-      <embeda-code id="my-editor"></embeda-code>
+      <embeda-code id="my-editor" theme="dark"></embeda-code>
     </div>
   </div>
 
@@ -57,28 +77,9 @@
       const editor = document.getElementById('my-editor');
 
       editor.config = {
-        files: [
-          {
-            path: 'src/index.ts',
-            content: `import { EmbedaCode } from './editor/embeda-code';\n\nexport { EmbedaCode };\n`,
-            language: 'typescript'
-          },
-          {
-            path: 'src/editor/embeda-code.ts',
-            content: `import { LitElement, html, css } from 'lit';\nimport { customElement, property } from 'lit/decorators.js';\n\n@customElement('embeda-code')\nexport class EmbedaCode extends LitElement {\n  @property() theme = 'dark';\n  \n  render() {\n    return html\`<div>Code Editor</div>\`;\n  }\n}\n`,
-            language: 'typescript'
-          },
-          {
-            path: 'package.json',
-            content: `{\n  "name": "embedacode",\n  "version": "1.0.0",\n  "description": "A read-only code editor component"\n}\n`,
-            language: 'json'
-          },
-          {
-            path: 'README.md',
-            content: `# Embeda Code\n\nA web component for displaying code with a file tree.\n\n## Usage\n\n\`\`\`html\n<embeda-code></embeda-code>\n\`\`\`\n`,
-            language: 'markdown'
-          }
-        ]
+        repoUrl: 'https://github.com/microsoft/TypeScript',
+        branch: 'main',
+        defaultFile: 'src/compiler/core.ts',
       };
     });
   </script>

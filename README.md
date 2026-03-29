@@ -1,14 +1,21 @@
 # Embedacode
 
-**Embed an entire GitHub repository** in a **blog article, tutorial, or course** — readers get a **read-only** file tree, syntax highlighting (Prism), copy/download, and optional file descriptions — without dropping a full IDE or a live playground into the page.
+**Embedacode** is a **read-only** code viewer for **articles, tutorials, courses, and docs**: a **file tree**, **Prism** syntax highlighting, **copy** and **download**, and optional **per-file descriptions**. You do **not** need GitHub to use it.
 
-The component is a **Lit custom element** with styles **scoped to its shadow DOM**, so it **won’t overwrite or inherit from your site or application CSS** in ways that break your layout. You can still theme it via CSS variables on the host when you want it to match your brand.
+**Two common setups:**
+
+1. **Snippets and hand-built trees** — Pass a `files` array: each entry is a path plus `content` (a string, or a URL to fetch when the user opens that file). Use this for one-off examples, multi-file walkthroughs, or any static JSON you control. No repository, no API keys.
+2. **Whole public GitHub repos (optional)** — Set `repoUrl` (and optionally `branch`, `defaultFile`) to load a real tree and file bodies from the **GitHub API**. Great for companion repos; skip it if you only want inline code.
+
+Either way, readers get a focused viewer instead of a full IDE or a live playground.
+
+The component is a **Lit** `<embeda-code>` custom element with styles **scoped to its shadow DOM**, so it **won’t fight your site or application CSS**. Theme it with the `theme` attribute and CSS variables on the host when you want it to match your brand.
 
 Ship via **one script tag** (standalone bundle) or **npm** (GitHub Packages).
 
-![Embedacode: file tree, line numbers, and syntax-highlighted TypeScript](docs/embeddable-code-editor-demo.png)
+![Embedacode: dark theme, optional live GitHub tree (microsoft/TypeScript), src/compiler/core.ts](docs/embeddable-code-editor-demo.png)
 
-> The screenshot filename still says `embeddable-code-editor-demo` from before the rename; rename the file in `docs/` whenever you like.
+> Screenshot: [`examples/script-tag-example.html`](examples/script-tag-example.html) using the **optional** `repoUrl` demo. The **minimal** path is `files` only (see the **Script tag** section below). Demo image filename is unchanged for stable links.
 
 ## Repo layout
 
@@ -53,12 +60,12 @@ The standalone build bundles Lit and Prism into one file: `dist/embedacode.stand
 </script>
 ```
 
-Heavier example: [examples/script-tag-example.html](https://github.com/mikehenken/embedacode/blob/main/examples/script-tag-example.html).
+**Live GitHub demo** (optional feature): [examples/script-tag-example.html](https://github.com/mikehenken/embedacode/blob/main/examples/script-tag-example.html). **Minimal HTML** (repo URL only, no page chrome): [examples/github-repo-example.html](https://github.com/mikehenken/embedacode/blob/main/examples/github-repo-example.html).
 
 Pinned release asset (no npm):
 
 ```html
-<script src="https://github.com/mikehenken/embedacode/releases/download/v2.0.0/embedacode.standalone.js"></script>
+<script src="https://github.com/mikehenken/embedacode/releases/download/v2.1.0/embedacode.standalone.js"></script>
 ```
 
 ## npm / bundler
@@ -77,20 +84,9 @@ The import registers the custom element; there is no default export. Set `elemen
 | `dist/embedacode.umd.js` | UMD (CommonJS / script environments that expect UMD) |
 | `dist/embedacode.standalone.js` | Single-file bundle (Lit + Prism included) |
 
-## Migrating from `embeddable-code-editor`
-
-If you used the previous package and custom element:
-
-| Before | After |
-|--------|--------|
-| npm `@mikehenken/embeddable-code-editor` | `@mikehenken/embedacode` |
-| `<embeddable-code-editor>` | `<embeda-code>` |
-| `dist/embeddable-code-editor.standalone.js` (and related filenames) | `dist/embedacode.standalone.js` (`embedacode.es.js`, `embedacode.umd.js`) |
-| `localStorage` key `embeddable-code-editor-theme` | `embedacode-theme` |
-
-Update script URLs, imports, element tags, and any code that reads the old theme key. Config shape and behavior are unchanged aside from branding and file names.
-
 ## Config
+
+Use **`files` alone** for snippets and static trees. Add **`repoUrl`** only when you want to pull from a public GitHub repository (it merges with `files`; your `files` entries override paths that clash).
 
 **File object**
 
@@ -115,7 +111,7 @@ Update script URLs, imports, element tags, and any code that reads the old theme
 | `wordWrap` | Long lines wrap (default `true`; set `false` for horizontal scroll). When `true`, the view uses a **CSS Grid** (one row per logical line) so the gutter stays aligned with wrapped text; when `false`, a classic dual-`pre` layout is used. |
 | `defaultFile` | Normalized path to open first (e.g. `README.md`). If omitted and `repoUrl` is set, root `README.md` is opened when present |
 
-## GitHub repos
+## GitHub repos (optional)
 
 ```javascript
 editor.config = {

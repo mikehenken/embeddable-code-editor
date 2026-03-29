@@ -373,6 +373,8 @@ export class EmbedaCode extends LitElement {
     }
 
     .code-grid-line code {
+      display: block;
+      width: 100%;
       margin: 0;
       padding: 0;
       background: none;
@@ -382,6 +384,13 @@ export class EmbedaCode extends LitElement {
       font-size: inherit;
       line-height: inherit;
       tab-size: inherit;
+    }
+
+    /* Prism tokens must not shift line metrics vs. the gutter */
+    .code-grid-line .token {
+      line-height: inherit;
+      font-size: inherit;
+      font-family: inherit;
     }
 
     :host([theme='light']) .code-grid-line code {

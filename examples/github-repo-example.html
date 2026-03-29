@@ -12,10 +12,15 @@
 </head>
 <body>
   <h1>GitHub Repo Example</h1>
-  <p class="note">Loading TypeScript from the official GitHub repo. Click files in the tree to see their content.</p>
+  <p class="note">
+    Loads <code>microsoft/TypeScript</code> (branch <code>main</code>) from GitHub and opens
+    <code>src/compiler/core.ts</code> first (TypeScript source, not only config files). Browse the tree for any path.
+    Needs network access; GitHub API rate limits apply without a token.
+    <a href="script-tag-example.html">Full-page demo</a> with the same repo settings.
+  </p>
 
   <div class="editor-wrapper">
-    <embeda-code id="github-editor"></embeda-code>
+    <embeda-code id="github-editor" theme="dark"></embeda-code>
   </div>
 
   <script>
@@ -23,7 +28,8 @@
       const editor = document.getElementById('github-editor');
       editor.config = {
         repoUrl: 'https://github.com/microsoft/TypeScript',
-        branch: 'main'
+        branch: 'main',
+        defaultFile: 'src/compiler/core.ts'
       };
     });
   </script>

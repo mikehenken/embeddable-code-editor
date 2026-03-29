@@ -13,6 +13,15 @@ const MAX_VIEW_LINES = 12_000;
 /** Above this, skip Prism tokenization and escape as plain text (Prism can hang on huge input). */
 const MAX_PRISM_CHARS = 200_000;
 
+/** GitHub and other sources often use CRLF; strip BOM. Must run before splitting on `\n` or `\r` pollutes each line. */
+export function normalizeEditorText(raw: string): string {
+  let s = raw;
+  if (s.length > 0 && s.charCodeAt(0) === 0xfeff) {
+    s = s.slice(1);
+  }
+  return s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -64,7 +73,7 @@ export function prepareCodeView(
   language: string = 'javascript',
   options?: PrepareCodeViewOptions,
 ): PrepareCodeViewResult {
-  let text = raw;
+  let text = normalizeEditorText(raw);
   if (text.length > MAX_VIEW_BYTES) {
     text =
       text.slice(0, MAX_VIEW_BYTES) +

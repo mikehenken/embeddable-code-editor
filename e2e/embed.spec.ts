@@ -3,13 +3,13 @@
  * instantiated in DOM, config applied, DOM and behavior asserted.
  * Uses examples/script-tag-example.html (served from repo root).
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-async function expandTreeFolder(editor: Locator, folderName: string): Promise<void> {
-  await editor.locator('.tree-row.dir-row').getByText(folderName, { exact: true }).click();
-}
+/** GitHub API + fetch can be slow; unauthenticated calls are rate-limited. */
+const GITHUB_LOAD_MS = 60_000;
 
 test.describe('Embed via script tag', () => {
+  test.describe.configure({ timeout: GITHUB_LOAD_MS + 30_000 });
   test('loads standalone JS and registers custom element', async ({ page }) => {
     await page.goto('/examples/script-tag-example.html');
     const editor = page.locator('embeda-code#my-editor');
@@ -20,26 +20,30 @@ test.describe('Embed via script tag', () => {
     expect(hasShadow).toBe(true);
   });
 
-  test('applies config and shows file tree after DOMContentLoaded', async ({ page }) => {
+  test('loads GitHub repo tree (microsoft/TypeScript)', async ({ page }) => {
     await page.goto('/examples/script-tag-example.html');
     const editor = page.locator('embeda-code#my-editor');
     await expect(editor).toBeVisible();
-    // Sidebar with file list (from config set in example script)
     const sidebar = editor.locator('.sidebar');
     await expect(sidebar).toBeVisible();
-    // First file is src/index.ts, so `src` is expanded; `src/editor` starts collapsed.
-    await expect(editor.locator('.tree-row.file-row')).toHaveCount(3);
-    await expect(editor.locator('text=package.json')).toBeVisible();
-    await expandTreeFolder(editor, 'editor');
-    await expect(editor.locator('.tree-row.file-row')).toHaveCount(4);
-    await expect(editor.locator('text=index.ts')).toBeVisible();
+    await expect(editor.getByTestId('sidebar-header')).toContainText('microsoft/TypeScript', {
+      timeout: GITHUB_LOAD_MS,
+    });
+    await expect(editor.locator('.tree-row.file-row').first()).toBeVisible({
+      timeout: GITHUB_LOAD_MS,
+    });
+    await expect(editor.getByText('core.ts', { exact: true }).first()).toBeVisible({
+      timeout: GITHUB_LOAD_MS,
+    });
   });
 
-  test('shows code view for first file', async ({ page }) => {
+  test('shows code view for default file (src/compiler/core.ts)', async ({ page }) => {
     await page.goto('/examples/script-tag-example.html');
     const editor = page.locator('embeda-code#my-editor');
-    await expect(editor.locator('.code-wrapper')).toBeVisible();
-    await expect(editor.locator('.code-wrapper')).toContainText('EmbedaCode');
+    const code = editor.locator('.code-wrapper');
+    await expect(code).toBeVisible({ timeout: GITHUB_LOAD_MS });
+    // Stable substring from the real file on main (see raw file on GitHub)
+    await expect(code).toContainText('emptyArray', { timeout: GITHUB_LOAD_MS });
   });
 
   test('copy and download buttons are present and clickable', async ({ page }) => {
