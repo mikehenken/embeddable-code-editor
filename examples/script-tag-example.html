@@ -39,25 +39,23 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.35);
     }
   </style>
-  
-  <script src="./dist/embeddable-code-editor.standalone.js"></script>
+
+  <script src="../dist/embeddable-code-editor.standalone.js"></script>
 </head>
 <body>
   <div class="page">
     <h1>Embeddable Syntax Highlighter</h1>
     <p class="subtitle">Read-only file tree + syntax highlighting. Load via script tag.</p>
-    
+
     <div class="editor-wrapper">
       <embeddable-code-editor id="my-editor"></embeddable-code-editor>
     </div>
   </div>
 
   <script>
-    // Wait for the component to be defined (or just run after DOM load since script is synchronous)
     document.addEventListener('DOMContentLoaded', () => {
       const editor = document.getElementById('my-editor');
-      
-      // Configure the editor with files
+
       editor.config = {
         files: [
           {

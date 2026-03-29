@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E2E Article Fixture — two editors</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; }
+    .editor-wrapper { height: 320px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
+  </style>
+  <script src="/dist/embeddable-code-editor.standalone.js"></script>
+</head>
+<body>
+  <h1>Article-style fixture (two editors)</h1>
+  <div class="editor-wrapper">
+    <embeddable-code-editor id="article-editor-a"></embeddable-code-editor>
+  </div>
+  <div class="editor-wrapper">
+    <embeddable-code-editor id="article-editor-b"></embeddable-code-editor>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const a = document.getElementById('article-editor-a');
+      a.config = {
+        files: [
+          {
+            path: 'src/index.ts',
+            content: 'export { EmbeddableCodeEditor } from "./embeddable-code-editor";\n',
+            language: 'typescript',
+            description: 'Entry point; re-exports the web component.'
+          },
+          {
+            path: 'src/example.js',
+            content: 'function hello() { return "world"; }\n',
+            language: 'javascript'
+          }
+        ]
+      };
+      const b = document.getElementById('article-editor-b');
+      b.config = {
+        files: [
+          {
+            path: 'lib/util.ts',
+            content: 'export const x = 1;\n',
+            language: 'typescript',
+            description: 'Secondary block for multi-editor layouts.'
+          }
+        ]
+      };
+    });
+  </script>
+</body>
+</html>

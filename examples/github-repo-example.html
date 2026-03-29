@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub Repo Example</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 1rem; }
+    .editor-wrapper { height: 500px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
+    .note { font-size: 0.9rem; color: #666; }
+  </style>
+  <script src="../dist/embeddable-code-editor.standalone.js"></script>
+</head>
+<body>
+  <h1>GitHub Repo Example</h1>
+  <p class="note">Loading TypeScript from the official GitHub repo. Click files in the tree to see their content.</p>
+
+  <div class="editor-wrapper">
+    <embeddable-code-editor id="github-editor"></embeddable-code-editor>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const editor = document.getElementById('github-editor');
+      editor.config = {
+        repoUrl: 'https://github.com/microsoft/TypeScript',
+        branch: 'main'
+      };
+    });
+  </script>
+</body>
+</html>
