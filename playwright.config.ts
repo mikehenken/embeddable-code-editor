@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * E2E and embed-verification tests for embeddable-code-editor.
- * Uses a static server to serve the repo root so script-tag and standalone bundle load correctly.
+ * Serves the repo root so /dist and /examples / e2e/fixtures resolve correctly after build.
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
