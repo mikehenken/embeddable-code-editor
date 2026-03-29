@@ -1,3 +1,3 @@
 export * from './types';
-export * from './highlighter';
-export * from './embeddable-code-editor';
+export * from './highlight/highlighter';
+export * from './editor/embeddable-code-editor';

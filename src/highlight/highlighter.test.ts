@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { highlight } from './highlighter';
+import { highlight, prepareCodeView } from './highlighter';
 
 describe('highlighter', () => {
   it('highlights javascript by default', () => {
@@ -12,5 +12,11 @@ describe('highlighter', () => {
     const code = 'body { color: red; }';
     const result = highlight(code, 'css');
     expect(result).toContain('<span class="token property">color</span>');
+  });
+
+  it('prepareCodeView returns line numbers aligned with capped body', () => {
+    const { lineNumbersText, highlightedHtml } = prepareCodeView('a\nb\nc', 'javascript');
+    expect(lineNumbersText).toBe('1\n2\n3');
+    expect(highlightedHtml.length).toBeGreaterThan(0);
   });
 });

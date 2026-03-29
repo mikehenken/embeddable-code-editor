@@ -1,120 +1,122 @@
 # Embeddable Code Editor
 
-Read-only syntax highlighter with a file tree. Lit + Prism; use it from a script tag or from npm.
+Lit web component: read-only code view, Prism highlighting, sidebar tree. Ship it with a single script tag or pull it from npm (GitHub Packages).
 
-## Install
+## Repo layout
 
-From GitHub Packages (npm alternative):
+| Path | Role |
+|------|------|
+| `src/editor/` | `<embeddable-code-editor>` and its styles |
+| `src/highlight/` | Prism wiring, size guards, `prepareCodeView` |
+| `src/tree/` | Path → folder tree, merge/override lists |
+| `src/github/` | Repo listing from the GitHub API |
+| `src/types.ts` | Config / file types shared by the above |
+| `examples/` | HTML demos (build first, then serve repo root) |
+| `e2e/` | Playwright; HTML fixtures under `e2e/fixtures/` |
+
+## Install (GitHub Packages)
 
 ```bash
 npm install @mikehenken/embeddable-code-editor
 ```
 
-Add to your project's `.npmrc`:
+`.npmrc`:
+
 ```
 @mikehenken:registry=https://npm.pkg.github.com
 ```
 
-## Config
+## Script tag
 
-You pass a single object to the component: `editor.config = { files: [...] }`. Each file has:
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `path` | yes | Label shown in the tree (e.g. `src/index.ts`) |
-| `content` | yes | The code string |
-| `language` | no | Prism language (`javascript`, `typescript`, `json`, `markdown`, etc.) |
-| `description` | no | Shown in a panel under the code when this file is selected |
-
-Example with two files and a description on one:
-
-```javascript
-editor.config = {
-  files: [
-    { path: 'src/index.ts', content: 'export const x = 1;', language: 'typescript' },
-    {
-      path: 'README.md',
-      content: '# Hello',
-      language: 'markdown',
-      description: 'Project readme — edit at your own risk.'
-    }
-  ]
-};
-```
-
-If a file has no `description`, the description panel stays hidden. Copy and download buttons apply to the currently selected file (copy to clipboard; download as a file).
-
----
-
-## Script tag (no bundler)
-
-Drop the standalone bundle in the page. It ships Lit and Prism, so one script is enough.
-
-1. Load the script (from your own host or a CDN).
-2. Put `<embeddable-code-editor>` where you want the block.
-3. After the DOM is ready, set `element.config` to your `{ files }`.
+Build produces `dist/embeddable-code-editor.standalone.js` (Lit + Prism bundled).
 
 ```html
 <script src="./dist/embeddable-code-editor.standalone.js"></script>
-<embeddable-code-editor id="my-editor"></embeddable-code-editor>
+<embeddable-code-editor id="editor"></embeddable-code-editor>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const editor = document.getElementById('my-editor');
-    editor.config = {
+    document.getElementById('editor').config = {
       files: [
         { path: 'src/index.ts', content: 'console.log("hi");', language: 'typescript' },
-        { path: 'package.json', content: '{"name":"my-app"}', language: 'json' }
-      ]
+      ],
     };
   });
 </script>
 ```
 
-There’s a full example in the repo: **script-tag-example.html**. It uses the same pattern with several files and languages.
+Heavier example: [examples/script-tag-example.html](https://github.com/mikehenken/embeddable-code-editor/blob/main/examples/script-tag-example.html).
 
-From GitHub Release (v1.0.0):
-
-```html
-<script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.0.0/embeddable-code-editor.standalone.js"></script>
-```
-
-For bundler users, install from GitHub Packages (see Install above). For script-tag, use the GitHub Release URL.
-
----
-
-## npm (bundler or Node)
-
-Install the package, then import the entry so the custom element is registered. After that you can use `<embeddable-code-editor>` in your HTML or framework.
-
-```javascript
-import 'embeddable-code-editor';
-```
-
-No default export — the import side-effect registers the tag. In a typical app you’d do that once (e.g. in your root or main bundle), then drop the element in a template:
+Pinned release asset (no npm):
 
 ```html
-<embeddable-code-editor id="my-editor"></embeddable-code-editor>
+<script src="https://github.com/mikehenken/embeddable-code-editor/releases/download/v1.1.0/embeddable-code-editor.standalone.js"></script>
 ```
 
+## npm / bundler
+
 ```javascript
-const editor = document.getElementById('my-editor');
+import '@mikehenken/embeddable-code-editor';
+```
+
+Import registers the custom element; no default export. Set `element.config` after the node exists.
+
+## Config
+
+**File object**
+
+| Field | Required | Notes |
+|-------|----------|--------|
+| `path` | yes | Tree label, e.g. `src/app.ts` |
+| `content` | yes | String or URL (fetched when the file is selected) |
+| `language` | no | Prism id: `typescript`, `json`, `markdown`, … |
+| `description` | no | Shown under the code when this file is active |
+
+**Top-level `config`**
+
+| Field | Notes |
+|-------|--------|
+| `files` | File objects; paths with `/` build nested folders |
+| `repoUrl` | GitHub HTTPS URL; merges with `files` (same path = your `files` entry wins) |
+| `branch` | Branch for `repoUrl` (default `main`) |
+| `tag` | Tag for `repoUrl`; overrides `branch` when set |
+| `showFileDescription` | `false` hides the description strip entirely |
+| `sidebarHeader` | Optional `{ title?, repoUrl? }` above the tree |
+| `remoteCacheMaxEntries` | How many URL-fetched bodies to keep (default `1`; raise for a small LRU) |
+
+## GitHub repos
+
+```javascript
 editor.config = {
-  files: [
-    { path: 'src/foo.ts', content: 'const x = 1;', language: 'typescript' },
-    { path: 'src/bar.ts', content: 'export {};', language: 'typescript', description: 'Bar module.' }
-  ]
+  repoUrl: 'https://github.com/owner/repo',
+  branch: 'develop', // optional
 };
 ```
 
-With a framework (e.g. React, Vue), use the element like any other custom element and set `config` when the ref is mounted. The component doesn’t depend on any framework.
+Tree API is capped at **2500** entries client-side. Folders start **collapsed** so big repos stay usable.
 
----
+Unauthenticated API calls count against GitHub’s **60/hour** limit; heavy sites should proxy with a token. Raw file fetches and the tree API are fine from the browser (CORS).
 
-## What you get
+## Remote `content` URLs
 
-- **File tree** — Sidebar lists all entries in `config.files`; click to switch the main code view.
-- **Syntax highlighting** — Prism handles the usual suspects (JS/TS, JSON, markdown, etc.).
-- **Copy** — Copies the current file’s content to the clipboard.
-- **Download** — Triggers a download of the current file (filename from `path`).
-- **Description panel** — Renders under the code when the selected file has a `description`; hidden otherwise.
-- **Themes** — Light/dark via CSS variables if you want to restyle.
+```javascript
+editor.config = {
+  files: [
+    {
+      path: 'package.json',
+      content: 'https://raw.githubusercontent.com/microsoft/TypeScript/main/package.json',
+      language: 'json',
+    },
+  ],
+};
+```
+
+Needs CORS-friendly URLs. Default cache keeps one remote body; bump `remoteCacheMaxEntries` if you want back/forward without refetch.
+
+## Toolbar behavior
+
+- **Copy** — current file text to clipboard  
+- **Download all** — zip of every file in the tree  
+- **Theme** — light/dark; stored as `embeddable-code-editor-theme` in `localStorage` (first paint follows `prefers-color-scheme`, else dark)  
+- **Fullscreen** — Escape exits  
+
+CSS variables on `:host` still override colors if you need a custom skin.
